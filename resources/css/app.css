@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif,
+        "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+        "Noto Color Emoji";
+}
+
+@layer components {
+    :root {
+        --sidebar-width: 250px;
+        --sidebar-width-unshow: 60px;
+    }
+
+    .dashboard {
+        @apply bg-gray-900 text-gray-400;
+    }
+
+    #sidebar {
+        @apply fixed top-0 left-0 flex flex-col bg-gray-800 h-screen max-h-screen transition-all duration-150 ease-linear overflow-hidden;
+        width: var(--sidebar-width);
+    }
+
+    #sidebar.unshow {
+        width: var(--sidebar-width-unshow);
+    }
+
+    #sidebar.unshow h1 {
+        @apply hidden opacity-0;
+    }
+
+    #sidebar.unshow ul > li > a {
+        @apply justify-center;
+    }
+
+    #content {
+        @apply flex flex-col justify-start items-start px-4 transition-all duration-150 ease-linear;
+        width: calc(100% - var(--sidebar-width));
+        margin-left: var(--sidebar-width);
+    }
+
+    #content .title {
+        @apply text-2xl text-white font-bold leading-relaxed;
+    }
+
+    #sidebar.unshow ~ #content {
+        width: calc(100vw - var(--sidebar-width-unshow));
+        margin-left: var(--sidebar-width-unshow);
+    }
+
+    .form-label {
+        @apply block text-sm/6 font-medium text-gray-400;
+    }
+
+    .form-input {
+        @apply block w-full rounded-md px-3 py-1.5 text-base text-gray-400 outline-1 -outline-offset-1 outline-gray-400 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6;
+    }
+
+    .form-select {
+        @apply col-start-1 row-start-1 w-full appearance-none rounded-md py-1.5 pr-8 pl-3 text-base text-gray-400 outline-1 -outline-offset-1 outline-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6;
+    }
+
+    .form-textarea {
+        @apply block w-full rounded-md px-3 py-1.5 text-base text-gray-400 outline-1 -outline-offset-1 outline-gray-400 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6;
+    }
+
+    .form-select option {
+        @apply bg-gray-800;
+    }
+}
