@@ -52,12 +52,14 @@ class PaymentController extends Controller
     {
         $cart = session()->get('cart', []);
         $order = self::userActive()->orders->findOrFail($orderID);
-        $orderDetails = OrderDetail::with(['product', 'productPrice'])->where('order_id', $order->id)->get();
+        $orderDetails = OrderDetail::with(['product', 'productPrice', 'productPhotoType'])->where('order_id', $order->id)->get();
         $paymentMethod = $order->paymentMethod->toArray();
 
         if (!$order) {
             return redirect()->route('home')->with('danger', 'Data Order tidak ditemukan');
         }
+
+        // dd($orderDetails->toArray());
 
         $data = [
             'order' => $order->toArray(),
@@ -74,16 +76,17 @@ class PaymentController extends Controller
     public function hapus_beli_langsung()
     {
         session()->forget('cart');
+        session()->forget('store');
         session()->put('bayar_langsung', false);
         return redirect()->route('home');
     }
 
-    public function proses_beli_langsung(int $productID)
+    public function proses_beli_langsung(int $productID, ?int $productPhotoTypesID = null)
     {
         $store = session()->get('store');
 
         // Ambil produk dari database
-        $product = Product::with(['latestProductPrice', 'user' => ['paymentMethods']])->findOrFail($productID);
+        $product = Product::with(['latestProductPrice', 'productPhotoTypes', 'user' => ['paymentMethods']])->findOrFail($productID);
 
         if (!$product) {
             return redirect()->route('home')->with('danger', 'Barang yang dibeli tidak ditemukan');
@@ -93,9 +96,15 @@ class PaymentController extends Controller
         $cartItem = [
             'id' => $product->id,
             'product' => $product->toArray(),
+            'productPhotoType' => null,
             'quantity' => 1,
             'price' => $product->toArray()['latest_product_price'],
         ];
+
+        if ($productPhotoTypesID != null) {
+            $productPhotoType = collect($product->productPhotoTypes()->get()->toArray())->where('id', $productPhotoTypesID)->first();
+            $cartItem['productPhotoType'] = $productPhotoType;
+        }
 
         // Ambil keranjang dari session (atau buat array kosong)
         $cart = session()->get('cart', []);
@@ -117,18 +126,30 @@ class PaymentController extends Controller
         $credential = $request->validate([
             'payment_method_id' => 'required',
             'address' => 'required',
+            'product_photo_id' => 'nullable|array',
             'qty' => 'required|array',
             'qty.*' => 'required|integer|min:1',
         ]);
 
-        $cart = session()->get('cart', []);
+
+        $carts = session()->get('cart', []);
+        $bayar_langsung = session()->get('bayar_langsung') ?? false;
 
         DB::beginTransaction();
 
         try {
+            $ids = array_column($carts, 'id');
+
             $payment_total = 0;
             foreach ($credential['qty'] as $productId => $qty) {
-                $total = $cart[$productId]['price']['price'] * $qty;
+                $product_photo_id = $credential['product_photo_id'][$productId] ?? null;
+                $cartSelectedIndex = $productId;
+
+                if ($bayar_langsung === false) {
+                    $cartSelectedIndex = array_search($product_photo_id === null ? $productId : $productId . "-" . $product_photo_id, $ids);
+                }
+
+                $total = $carts[$cartSelectedIndex]['price']['price'] * $qty;
                 $payment_total += $total;
             }
 
@@ -141,11 +162,22 @@ class PaymentController extends Controller
             ]);
 
             $orderDetails = [];
+
             foreach ($credential['qty'] as $productId => $qty) {
+                $product_photo_id = $credential['product_photo_id'][$productId] ?? null;
+                $cartSelectedIndex = $productId;
+
+                if ($bayar_langsung === false) {
+                    $cartSelectedIndex = array_search($product_photo_id === null ? $productId : $productId . "-" . $product_photo_id, $ids);
+                }
+
+                $productPriceID = $carts[$cartSelectedIndex]['price']['id'];
+
                 $orderDetails[] = [
                     'order_id' => $order->id,
                     'product_id' => $productId,
-                    'product_price_id' => $cart[$productId]['price']['id'],
+                    'product_price_id' => $productPriceID,
+                    'product_photo_type_id' => $product_photo_id,
                     'qty' => $qty,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -163,7 +195,7 @@ class PaymentController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return back()->with('danger', $th->getMessage());
+            return back()->with('danger', "Terjadi Kesalahan: " . $th->getMessage() . ". " . $th->getFile() . ":" . $th->getLine());
         }
     }
 

@@ -95,7 +95,7 @@
             <div class="mb-4">
                 <label for="address" class="form-label">Alamat Pengiriman</label>
                 <div class="mt-2">
-                    <textarea name="address" id="address" rows="4" class="form-textarea h-full" placeholder="Deskripsikan produk anda">{{ old('address') }}</textarea>
+                    <textarea name="address" id="address" rows="4" class="form-textarea h-full" placeholder="Alamat lengkap dengan kode pos">{{ old('address') }}</textarea>
                 </div>
                 @error('address')
                 <span class="text-sm text-red-500">{{ $message }}</span>
@@ -110,7 +110,9 @@
             <div class="inline-flex w-full p-4 h-40 mb-4 border border-gray-400 rounded-2xl gap-x-4">
                 <img src="/images/{{ $cart['product']['photo'] }}" alt="{{ $cart['product']['name'] }}" class="rounded-lg">
                 <div class="w-full flex flex-col">
-                    <h3 class="text-lg font-semibold text-gray-400 mb-1 truncate">{{ $cart['product']['name'] }}</h3>
+                    <h3 class="text-lg font-semibold text-gray-400 mb-1 truncate">
+                        {{ $cart['product']['name'] }}
+                    </h3>
                     <span class="inline-flex items-center gap-2 rounded-lg w-fit text-xs text-white bg-indigo-800 px-3 py-1.5 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
@@ -118,15 +120,29 @@
 
                         {{ $cart['product']['user']['nama'] }}
                     </span>
-                    <div class="grid grid-cols-1 w-fit">
-                        <select id="qty" name="qty[{{ $cart['product']['id'] }}]" class="form-select">
-                            @for($qty = 1; $qty <= $cart['product']['stocks']; $qty++)
-                                <option value="{{ $qty }}">{{ $qty }}</option>
-                                @endfor
-                        </select>
-                        <svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
-                            <path fill-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-                        </svg>
+                    <div class="flex flex-col lg:flex-row items-center gap-x-2">
+                        <div class="grid grid-cols-1 w-fit">
+                            <select id="qty" name="qty[{{ $cart['product']['id'] }}]" class="form-select">
+                                @for($qty = 1; $qty <= $cart['product']['stocks']; $qty++)
+                                    <option value="{{ $qty }}" {{ $cart['quantity'] == $qty?"selected":"" }}>{{ $qty }}</option>
+                                    @endfor
+                            </select>
+                            <svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
+                                <path fill-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        @if($cart['productPhotoType'] != null)
+                        <div class="grid grid-cols-1 w-fit">
+                            <select name="product_photo_id[{{ $cart['product']['id'] }}]" class="form-select">
+                                @foreach($cart['product']['product_photo_types'] as $productPhotoType)
+                                <option value="{{ $productPhotoType['id'] }}" {{ $productPhotoType['id'] == $cart['productPhotoType']['id']?"selected":'' }}>{{ $productPhotoType['type'] }}</option>
+                                @endforeach
+                            </select>
+                            <svg class="pointer-events-none col-start-1 row-start-1 mr-2 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" data-slot="icon">
+                                <path fill-rule="evenodd" d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

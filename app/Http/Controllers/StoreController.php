@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ProductType;
 use App\Models\Order;
+use App\Models\ProductPhotoType;
 use App\Models\ProductPrice;
 use App\Repositories\PaymentMethodRepositories;
 use App\Repositories\ProductRepositories;
@@ -28,6 +29,7 @@ class StoreController extends Controller
             $query->where('user_id', self::userActive()->id);
         })
             ->with([
+                'orderDetails.productPhotoType',
                 'orderDetails.product.latestProductPrice',
                 'user',
                 'paymentMethod'
@@ -70,7 +72,17 @@ class StoreController extends Controller
     public function editProduk(int $productID)
     {
         $product = ProductRepositories::getProductById($productID);
-        // dd($product);
+
+        if (empty($product['product_photo_types'])) {
+            ProductPhotoType::create([
+                'type' => '',
+                'photo' => $product['photo'],
+                'product_id' => $productID,
+            ]);
+
+            return redirect()->route('store.edit.produk', ['productID' => $productID]);
+        }
+
         $data = [
             'tipe_produk' => ProductType::cases(),
             'produk' => $product,
@@ -103,7 +115,7 @@ class StoreController extends Controller
     public function pemesanan()
     {
         $orders = self::orders();
-
+        // dd($orders->toArray());
         $data = [
             'orders' => $orders->toArray(),
         ];
@@ -186,13 +198,15 @@ class StoreController extends Controller
 
         $credentials = $request->validate([
             'name' => 'required',
-            'photo' => 'required|image',
+            'photo' => 'required|array',
+            'photo.*' => 'required|image',
             'description' => 'required',
             'stocks' => 'required|integer',
             'type' => 'required',
             'price' => 'required|integer',
             'discount_number' => 'nullable|integer',
             'discount_percent' => 'nullable|integer',
+            'jenis_produk' => 'array',
         ]);
 
         return ProductRepositories::insertProduct($credentials);
@@ -202,14 +216,67 @@ class StoreController extends Controller
     {
         $credentials = $request->validate([
             'name' => 'required',
-            'photo' => 'nullable|image',
             'description' => 'required',
             'stocks' => 'required|integer',
             'type' => 'required',
+
+            'photo' => 'nullable|array',
+            'photo.*' => 'nullable|image',
+            'jenis_produk' => 'nullable|array',
+
+            'edit_id' => 'nullable|array',
+            'photo_edit' => 'nullable|array',
+            'photo_edit.*' => 'nullable|image',
+            'jenis_produk_edit' => 'nullable|array',
         ]);
+
+        $data = [];
+
+        // Untuk update
+        foreach ($request->input('edit_id', []) as $i => $id) {
+            if ($id == null) {
+                continue;
+            }
+            $row = [
+                'id' => $id,
+                'type' => $request->jenis_produk_edit[$i] ?? null,
+            ];
+
+            $photoFile = $request->file('photo_edit')[$i] ?? null;
+            if ($photoFile) {
+                $photoPath = $photoFile->store('product', 'public');
+                $row['photo'] = $photoPath;
+            }
+
+            $row['product_id'] = $productID; // opsional, untuk konsistensi
+            $data[] = $row;
+        }
+
+        // Untuk insert baru
+        if (isset($credentials['photo'])) {
+            foreach ($credentials['photo'] as $j => $photo) {
+
+                $photoPath = $photo->store('product', 'public');
+                $type = $credentials['jenis_produk'][$j] ?? "";
+
+                $data[] = [
+                    'id' => null,
+                    'type' => $type,
+                    'photo' => $photoPath,
+                    'product_id' => $productID,
+                ];
+            }
+        }
+
+        // Ambil satu photo pertama untuk update ke produk utama
+        $firstPhoto = collect($data)->firstWhere('photo');
+
+        $credentials['product_photo_type'] = $data;
+        $credentials['first_photo'] = $firstPhoto['photo'] ?? null;
 
         return ProductRepositories::updateProduct($productID, $credentials);
     }
+
 
     public function tambah_harga_produk(Request $request, int $productID)
     {

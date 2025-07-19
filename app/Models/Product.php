@@ -40,6 +40,11 @@ class Product extends Model
         return $this->hasMany(ProductPrice::class);
     }
 
+    public function productPhotoTypes(): HasMany
+    {
+        return $this->hasMany(ProductPhotoType::class);
+    }
+
     public function latestProductPrice(): HasOne
     {
         return $this->hasOne(ProductPrice::class)->latestOfMany();

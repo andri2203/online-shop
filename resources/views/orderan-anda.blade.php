@@ -19,7 +19,7 @@
             @foreach($order_details as $index => $order_detail)
             <tr>
                 <th class="text-center px-4 py-2.5">{{ $index + 1 }}</th>
-                <td class="text-center px-4 py-2.5">{{ $order_detail['product']['name'] }}</td>
+                <td class="text-center px-4 py-2.5">{{ $order_detail['product']['name'] }} {{ $order_detail['product_photo_type']==null?"":" - " .$order_detail['product_photo_type']['type'] }}</td>
                 <td class="text-center px-4 py-2.5">{{ $order_detail['qty'] }}</td>
                 <td class="text-end px-4 py-2.5">Rp {{ number_format($order_detail['product_price']['price'], 0, ',', '.') }}</td>
                 <td class="text-end px-4 py-2.5">Rp {{ number_format($order_detail['product_price']['price'] * $order_detail['qty'], 0, ',', '.') }}</td>

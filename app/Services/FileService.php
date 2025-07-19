@@ -16,7 +16,7 @@ class FileService
 
     static protected function doUpload($path, $image)
     {
-        return Storage::disk('public')->put($path, $image);
+        return Storage::disk('public')->putFile($path, $image);
     }
 
     static protected function doShow(string $path, string $image)
@@ -28,7 +28,7 @@ class FileService
         return response()->file($image);
     }
 
-    static public function delete(string $imagePath)
+    static public function delete(string|array $imagePath)
     {
         return Storage::delete($imagePath);
     }
@@ -36,6 +36,18 @@ class FileService
     static public function uploadProductImage($image)
     {
         return self::doUpload(self::$product, $image);
+    }
+
+    static public function uploadBatchProductImage(array $images)
+    {
+        $filenames = collect();
+
+        foreach ($images as $image) {
+            $file = self::doUpload(self::$product, $image);
+            $filenames->add($file);
+        }
+
+        return $filenames->toArray();
     }
 
     static public function uploadAvatar($image)

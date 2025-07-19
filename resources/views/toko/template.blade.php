@@ -164,6 +164,48 @@
         </nav>
         <section class="flex flex-col w-full justify-start items-start py-2.5">@yield('content')</section>
     </main>
+    <script>
+        function printElement(id) {
+            const content = document.getElementById(id);
+            if (!content) return;
+
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow.document;
+
+            doc.open();
+            doc.write(`
+            <html>
+                <head>
+                    ${document.head.innerHTML} <!-- ambil semua style -->
+                </head>
+                <body class="bg-white text-black p-4">
+                    ${content.outerHTML}
+                </body>
+            </html>
+        `);
+            doc.close();
+
+            iframe.onload = function() {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 1000);
+            };
+        }
+
+        window.printElement = printElement;
+    </script>
+
+
 </body>
 
 </html>

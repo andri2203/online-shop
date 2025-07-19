@@ -22,12 +22,13 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::prefix('keranjang')->group(function () {
-        Route::get('/tambah/{productID}', [HomeController::class, 'tambah_keranjang'])->name('keranjang.tambah_keranjang');
+        Route::get('/tambah/{productID}/{productPhotoTypesID?}', [HomeController::class, 'tambah_keranjang'])->name('keranjang.tambah_keranjang');
+        Route::get('/hapus/{cart_index}', [HomeController::class, 'hapus_dari_keranjang'])->name('keranjang.hapus_dari_keranjang');
     });
 
     Route::prefix('bayar')->group(function () {
         Route::get('/proses', [PaymentController::class, 'pembayaran'])->name('bayar.proses');
-        Route::get('/beli-langsung/proses/{productID}', [PaymentController::class, 'proses_beli_langsung'])->name('bayar.proses_beli_langsung');
+        Route::get('/beli-langsung/proses/{productID}/{productPhotoTypesID?}', [PaymentController::class, 'proses_beli_langsung'])->name('bayar.proses_beli_langsung');
         Route::get('/beli-langsung/hapus', [PaymentController::class, 'hapus_beli_langsung'])->name('bayar.hapus_beli_langsung');
         Route::post('/proses-pembayaran', [PaymentController::class, 'proses_pembayaran'])->name('bayar.proses_pembayaran');
         Route::post('/proses-bukti-bayar/{orderID}', [PaymentController::class, 'proses_upload_bukti_bayar'])->name('bayar.proses_upload_bukti_bayar');

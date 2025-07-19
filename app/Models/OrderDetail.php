@@ -11,6 +11,7 @@ class OrderDetail extends Model
         'order_id',
         'product_id',
         'product_price_id',
+        'product_photo_type_id',
         'qty',
     ];
 
@@ -27,5 +28,10 @@ class OrderDetail extends Model
     public function productPrice(): BelongsTo
     {
         return $this->belongsTo(ProductPrice::class);
+    }
+
+    public function productPhotoType(): BelongsTo
+    {
+        return $this->belongsTo(ProductPhotoType::class);
     }
 }
