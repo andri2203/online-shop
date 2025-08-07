@@ -67,6 +67,7 @@ Route::middleware(['auth', 'role:store'])->group(function () {
         Route::post('/harga-produk/ubah/{productPriceID}', [StoreController::class, 'ubah_harga_produk'])->name('store.ubah_harga_produk');
         Route::post('/metode-pembayaran', [StoreController::class, 'tambah_metode_pembayaran'])->name('store.tambah_metode_pembayaran');
         Route::post('/metode-pembayaran/ubah/{paymentMethodID}', [StoreController::class, 'ubah_metode_pembayaran'])->name('store.ubah_metode_pembayaran');
+        Route::post('/laporan/make', [StoreController::class, 'buatLaporan'])->name('store.laporan.buat');
 
         // Delete Route
         Route::get('/hapus-harga-produk/{productPriceID}', [StoreController::class, 'hapus_harga_produk'])->name('store.hapus_harga_produk');

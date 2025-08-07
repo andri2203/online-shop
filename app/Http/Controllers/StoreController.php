@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Enums\ProductType;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\ProductPhotoType;
 use App\Models\ProductPrice;
 use App\Repositories\PaymentMethodRepositories;
 use App\Repositories\ProductRepositories;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class StoreController extends Controller
 {
@@ -191,6 +193,47 @@ class StoreController extends Controller
     {
         return view('toko.laporan');
     }
+
+    public function buatLaporan(Request $request)
+    {
+        $credentials = $request->validate([
+            'report' => 'required',
+        ]);
+
+        $data = [];
+
+        if ($credentials['report'] == 'LSP') { // Laporan Stock Product
+            $data['title'] = 'Laporan Stok Produk';
+            $data['header'] = ['Nama Produk', 'Stok', 'Tipe'];
+            $data['body'] = Product::select('name', 'stocks', 'type')->get()->toArray();
+        } else { // Laporan Penjualan
+            $data['title'] = 'Laporan Penjualan';
+            $data['header'] = ['Nama Produk', 'Jumlah Penjualan', 'Total Penjualan'];
+            $data['body'] = Product::with(['orderDetails', 'latestProductPrice'])
+                ->get()
+                ->map(function ($product) {
+                    // Hitung total qty dari semua orderDetails
+                    $totalQty = $product->orderDetails->sum('qty');
+
+                    // Ambil harga dari relasi latestProductPrice
+                    $price = $product->latestProductPrice->price ?? 0;
+
+                    // Hitung total penjualan
+                    $totalSales = $price * $totalQty;
+
+                    return [
+                        'name' => $product->name,
+                        'total_qty' => $totalQty,
+                        'total_sales' => $totalSales,
+                    ];
+                })
+                ->toArray();
+        }
+
+        return view('toko.report', $data);
+    }
+
+    public function downloadLaporan() {}
 
     // Create, Update & Delete Section
     public function tambah_produk(Request $request)
